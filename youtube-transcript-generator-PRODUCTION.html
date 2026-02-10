@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Transcript Generator - Extractor Masivo de Transcripciones</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.5;
+            color: #1f2937;
+        }
+
+        .app-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #fef2f2 0%, #fce7f3 50%, #fff7ed 100%);
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 1024px;
+            margin: 0 auto;
+            padding: 2rem 0;
+        }
+
+        .card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .title {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 1.125rem;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.25rem;
+            background: #f3f4f6;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: transparent;
+            color: #6b7280;
+        }
+
+        .mode-btn.active {
+            background: white;
+            color: #dc2626;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            color: #374151;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .input:focus {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+
+        .textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            color: #374151;
+            outline: none;
+            transition: all 0.2s;
+            resize: vertical;
+            font-family: 'Monaco', 'Courier New', monospace;
+            line-height: 1.6;
+        }
+
+        .textarea:focus {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #b91c1c;
+        }
+
+        .btn-primary:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #dc2626;
+            border: 1px solid #dc2626;
+        }
+
+        .btn-outline:hover {
+            background: #fef2f2;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%);
+            border: 1px solid #bfdbfe;
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+
+        .info-title {
+            font-weight: 600;
+            color: #1e3a8a;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-list {
+            font-size: 0.875rem;
+            color: #1e40af;
+            margin-left: 1rem;
+        }
+
+        .info-list li {
+            margin-bottom: 0.25rem;
+        }
+
+        .error-box {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .error-text {
+            color: #991b1b;
+            font-weight: 500;
+        }
+
+        .success-box {
+            background: #f0fdf4;
+            border-left: 4px solid #10b981;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .success-text {
+            color: #065f46;
+            font-weight: 500;
+        }
+
+        .progress-section {
+            margin-top: 1.5rem;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .progress-stats {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 0.5rem;
+            background: #e5e7eb;
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #dc2626, #ef4444);
+            transition: width 0.3s ease;
+        }
+
+        .video-list {
+            margin-top: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .video-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .video-info {
+            flex: 1;
+            margin-right: 1rem;
+        }
+
+        .video-id {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #1f2937;
+            font-family: 'Monaco', monospace;
+        }
+
+        .video-status {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-processing {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .transcript-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .transcript-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .transcript-subtitle {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .transcript-box {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .transcript-text {
+            white-space: pre-wrap;
+            font-size: 0.875rem;
+            color: #374151;
+            font-family: 'Monaco', 'Courier New', monospace;
+            line-height: 1.6;
+        }
+
+        .warning-box {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .warning-text {
+            font-size: 0.875rem;
+            color: #92400e;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            transition: box-shadow 0.2s;
+        }
+
+        .feature-card:hover {
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+        }
+
+        .feature-icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .feature-icon.red { background: #fee2e2; }
+        .feature-icon.green { background: #d1fae5; }
+        .feature-icon.blue { background: #dbeafe; }
+        .feature-icon.purple { background: #f3e8ff; }
+
+        .feature-title {
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-text {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .footer p {
+            margin-bottom: 0.5rem;
+        }
+
+        .icon {
+            width: 1.25rem;
+            height: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .icon-lg {
+            width: 3rem;
+            height: 3rem;
+        }
+
+        .icon-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+
+        .text-green {
+            color: #059669;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 1.75rem;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .transcript-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .button-group {
+                width: 100%;
+            }
+
+            .button-group .btn {
+                flex: 1;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .mode-selector {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // CONSTANTES DE CONFIGURACIÓN
+        const BULK_LIMITS = {
+            MAX_VIDEOS: 50,           // Máximo de videos en un lote
+            CONCURRENT_REQUESTS: 3,   // Procesamiento simultáneo
+            DELAY_BETWEEN_BATCHES: 1000, // 1 segundo entre lotes
+            REQUEST_TIMEOUT: 30000    // 30 segundos timeout por video
+        };
+
+        // SVG Icon Components
+        const Youtube = ({ style }) => (
+            <svg style={style} className="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <rect x="2" y="4" width="20" height="16" rx="2" strokeWidth="2"/>
+                <path d="M10 9l5 3-5 3V9z" fill="currentColor" stroke="none"/>
+            </svg>
+        );
+
+        const Copy = () => (
+            <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <rect x="9" y="9" width="13" height="13" rx="2" strokeWidth="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" strokeWidth="2"/>
+            </svg>
+        );
+
+        const Download = () => (
+            <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v13m0 0l-4-4m4 4l4-4M3 20h18" />
+            </svg>
+        );
+
+        const Loader2 = () => (
+            <svg className="icon spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeWidth="2" d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
+            </svg>
+        );
+
+        const CheckCircle2 = () => (
+            <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" strokeWidth="2"/>
+                <path strokeWidth="2" d="M9 12l2 2 4-4" />
+            </svg>
+        );
+
+        const List = () => (
+            <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <line x1="8" y1="6" x2="21" y2="6" strokeWidth="2"/>
+                <line x1="8" y1="12" x2="21" y2="12" strokeWidth="2"/>
+                <line x1="8" y1="18" x2="21" y2="18" strokeWidth="2"/>
+                <line x1="3" y1="6" x2="3.01" y2="6" strokeWidth="2"/>
+                <line x1="3" y1="12" x2="3.01" y2="12" strokeWidth="2"/>
+                <line x1="3" y1="18" x2="3.01" y2="18" strokeWidth="2"/>
+            </svg>
+        );
+
+        const YouTubeTranscriptApp = () => {
+            const [mode, setMode] = useState('single'); // 'single' o 'bulk'
+            const [url, setUrl] = useState('');
+            const [bulkUrls, setBulkUrls] = useState('');
+            const [transcript, setTranscript] = useState('');
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState('');
+            const [success, setSuccess] = useState('');
+            const [copied, setCopied] = useState(false);
+            const [videoTitle, setVideoTitle] = useState('');
+            
+            // Bulk processing state
+            const [bulkVideos, setBulkVideos] = useState([]);
+            const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
+            const [bulkResults, setBulkResults] = useState([]);
+
+            const extractVideoId = (url) => {
+                const patterns = [
+                    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+                    /youtube\.com\/shorts\/([^&\n?#]+)/
+                ];
+                
+                for (const pattern of patterns) {
+                    const match = url.match(pattern);
+                    if (match) return match[1];
+                }
+                return null;
+            };
+
+            const parseUrls = (text) => {
+                const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+                const videoIds = [];
+                const errors = [];
+
+                lines.forEach((line, index) => {
+                    const videoId = extractVideoId(line);
+                    if (videoId) {
+                        videoIds.push({ id: videoId, url: line, index });
+                    } else {
+                        errors.push(`Línea ${index + 1}: URL inválida`);
+                    }
+                });
+
+                return { videoIds, errors };
+            };
+
+            const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+            const fetchSingleTranscript = async (videoId) => {
+                // Llamada real al API
+                const response = await fetch('http://localhost:3001/api/transcript', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ videoId })
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Error al obtener transcripción');
+                }
+
+                return data.transcript;
+            };
+
+            const processBulkTranscripts = async (videoIds) => {
+                const ids = videoIds.map(v => v.id);
+                
+                setBulkProgress({ current: 0, total: ids.length });
+                setBulkResults([]);
+
+                // Llamada real al API bulk
+                const response = await fetch('http://localhost:3001/api/bulk-transcript', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ videoIds: ids })
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Error en procesamiento bulk');
+                }
+
+                // Actualizar UI en tiempo real mientras procesa
+                let processed = 0;
+                const updateInterval = setInterval(() => {
+                    processed++;
+                    setBulkProgress({ current: Math.min(processed, ids.length), total: ids.length });
+                    
+                    // Actualizar estado de videos
+                    setBulkVideos(prev => {
+                        const updated = [...prev];
+                        if (processed <= updated.length) {
+                            updated[processed - 1] = {
+                                ...updated[processed - 1],
+                                status: 'processing'
+                            };
+                        }
+                        return updated;
+                    });
+                    
+                    if (processed >= ids.length) {
+                        clearInterval(updateInterval);
+                    }
+                }, 500);
+
+                // Esperar un poco para simular procesamiento progresivo en UI
+                await new Promise(resolve => setTimeout(resolve, ids.length * 500));
+                clearInterval(updateInterval);
+
+                // Transformar resultados al formato del frontend
+                const results = data.results.map(result => {
+                    // Actualizar estado final del video
+                    setBulkVideos(prev => {
+                        const updated = [...prev];
+                        const index = updated.findIndex(v => v.id === result.videoId);
+                        if (index !== -1) {
+                            updated[index] = {
+                                ...updated[index],
+                                status: result.success ? 'completed' : 'error',
+                                error: result.error,
+                                transcript: result.transcript
+                            };
+                        }
+                        return updated;
+                    });
+
+                    return {
+                        id: result.videoId,
+                        url: `https://youtube.com/watch?v=${result.videoId}`,
+                        status: result.success ? 'completed' : 'error',
+                        transcript: result.transcript,
+                        error: result.error
+                    };
+                });
+
+                setBulkProgress({ current: ids.length, total: ids.length });
+                return results;
+            };
+
+            const handleSingleFetch = async () => {
+                setLoading(true);
+                setError('');
+                setTranscript('');
+                setVideoTitle('');
+                setCopied(false);
+
+                try {
+                    const videoId = extractVideoId(url);
+                    
+                    if (!videoId) {
+                        throw new Error('URL de YouTube inválida. Por favor verifica el enlace.');
+                    }
+
+                    const transcriptText = await fetchSingleTranscript(videoId);
+                    setTranscript(transcriptText);
+                    setVideoTitle(`Transcripción del Video ${videoId}`);
+                    
+                } catch (err) {
+                    setError(err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleBulkFetch = async () => {
+                setLoading(true);
+                setError('');
+                setSuccess('');
+                setBulkResults([]);
+
+                try {
+                    const { videoIds, errors } = parseUrls(bulkUrls);
+
+                    if (errors.length > 0) {
+                        throw new Error(`Errores en las URLs:\n${errors.join('\n')}`);
+                    }
+
+                    if (videoIds.length === 0) {
+                        throw new Error('No se encontraron URLs válidas');
+                    }
+
+                    if (videoIds.length > BULK_LIMITS.MAX_VIDEOS) {
+                        throw new Error(`Máximo ${BULK_LIMITS.MAX_VIDEOS} videos permitidos. Tienes ${videoIds.length}`);
+                    }
+
+                    // Inicializar lista de videos
+                    const initialVideos = videoIds.map(v => ({
+                        id: v.id,
+                        url: v.url,
+                        status: 'pending',
+                        transcript: null,
+                        error: null
+                    }));
+                    
+                    setBulkVideos(initialVideos);
+
+                    // Procesar transcripciones
+                    const results = await processBulkTranscripts(videoIds);
+                    setBulkResults(results);
+
+                    const completed = results.filter(r => r.status === 'completed').length;
+                    const failed = results.filter(r => r.status === 'error').length;
+
+                    setSuccess(`Proceso completado: ${completed} exitosos, ${failed} fallidos`);
+
+                } catch (err) {
+                    setError(err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleCopy = async () => {
+                try {
+                    await navigator.clipboard.writeText(transcript);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                } catch (err) {
+                    alert('Error al copiar al portapapeles');
+                }
+            };
+
+            const handleDownload = () => {
+                const blob = new Blob([transcript], { type: 'text/plain;charset=utf-8' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `youtube-transcript-${Date.now()}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            };
+
+            const handleBulkDownload = () => {
+                const successfulResults = bulkResults.filter(r => r.status === 'completed');
+                
+                if (successfulResults.length === 0) {
+                    alert('No hay transcripciones exitosas para descargar');
+                    return;
+                }
+
+                const combinedText = successfulResults.map(result => 
+                    `${'='.repeat(80)}\n${result.transcript}\n\n`
+                ).join('');
+
+                const blob = new Blob([combinedText], { type: 'text/plain;charset=utf-8' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `youtube-bulk-transcripts-${Date.now()}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            };
+
+            const getStatusBadge = (status, error) => {
+                const badges = {
+                    pending: <span className="status-badge status-pending">⏳ Pendiente</span>,
+                    processing: <span className="status-badge status-processing pulse">🔄 Procesando...</span>,
+                    completed: <span className="status-badge status-completed">✅ Completado</span>,
+                    error: <span className="status-badge status-error">❌ Error</span>
+                };
+                return badges[status] || badges.pending;
+            };
+
+            return (
+                <div className="app-container">
+                    <div className="container">
+                        <div className="header">
+                            <div className="header-title">
+                                <Youtube style={{color: '#dc2626'}} />
+                                <h1 className="title">YouTube Transcript Generator</h1>
+                            </div>
+                            <p className="subtitle">
+                                Extrae transcripciones de YouTube - Individual o en Bulk
+                            </p>
+                        </div>
+
+                        {/* Mode Selector */}
+                        <div className="card">
+                            <div className="mode-selector">
+                                <button 
+                                    className={`mode-btn ${mode === 'single' ? 'active' : ''}`}
+                                    onClick={() => setMode('single')}
+                                >
+                                    📄 Individual
+                                </button>
+                                <button 
+                                    className={`mode-btn ${mode === 'bulk' ? 'active' : ''}`}
+                                    onClick={() => setMode('bulk')}
+                                >
+                                    📦 Bulk (hasta {BULK_LIMITS.MAX_VIDEOS} videos)
+                                </button>
+                            </div>
+
+                            {/* Single Mode */}
+                            {mode === 'single' && (
+                                <>
+                                    <div className="form-group">
+                                        <label className="label">URL del video de YouTube</label>
+                                        <div className="input-group">
+                                            <input
+                                                type="text"
+                                                value={url}
+                                                onChange={(e) => setUrl(e.target.value)}
+                                                placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                                                className="input"
+                                                onKeyPress={(e) => e.key === 'Enter' && !loading && url && handleSingleFetch()}
+                                            />
+                                            <button
+                                                onClick={handleSingleFetch}
+                                                disabled={loading || !url}
+                                                className="btn btn-primary"
+                                            >
+                                                {loading ? (
+                                                    <>
+                                                        <Loader2 />
+                                                        Procesando...
+                                                    </>
+                                                ) : (
+                                                    'Obtener Transcripción'
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="info-box">
+                                        <h3 className="info-title">📋 Modo Individual</h3>
+                                        <ol className="info-list">
+                                            <li>Copia la URL del video de YouTube</li>
+                                            <li>Pégala arriba y haz clic en "Obtener Transcripción"</li>
+                                            <li>Descarga o copia el resultado</li>
+                                        </ol>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* Bulk Mode */}
+                            {mode === 'bulk' && (
+                                <>
+                                    <div className="form-group">
+                                        <label className="label">
+                                            URLs de videos (una por línea, máximo {BULK_LIMITS.MAX_VIDEOS})
+                                        </label>
+                                        <textarea
+                                            value={bulkUrls}
+                                            onChange={(e) => setBulkUrls(e.target.value)}
+                                            placeholder={`https://www.youtube.com/watch?v=VIDEO_ID_1
+https://www.youtube.com/watch?v=VIDEO_ID_2
+https://youtu.be/VIDEO_ID_3
+...`}
+                                            className="textarea"
+                                            rows="8"
+                                        />
+                                        <div style={{marginTop: '0.5rem', fontSize: '0.875rem', color: '#6b7280'}}>
+                                            {bulkUrls.split('\n').filter(line => line.trim()).length} URLs ingresadas
+                                        </div>
+                                    </div>
+
+                                    <div className="info-box">
+                                        <h3 className="info-title">⚡ Modo Bulk - Configuración</h3>
+                                        <ol className="info-list">
+                                            <li>Máximo: {BULK_LIMITS.MAX_VIDEOS} videos por lote</li>
+                                            <li>Procesamiento simultáneo: {BULK_LIMITS.CONCURRENT_REQUESTS} videos</li>
+                                            <li>Delay entre lotes: {BULK_LIMITS.DELAY_BETWEEN_BATCHES}ms</li>
+                                            <li>Timeout por video: {BULK_LIMITS.REQUEST_TIMEOUT / 1000}s</li>
+                                        </ol>
+                                    </div>
+
+                                    <button
+                                        onClick={handleBulkFetch}
+                                        disabled={loading || !bulkUrls.trim()}
+                                        className="btn btn-primary"
+                                        style={{width: '100%', marginTop: '1rem'}}
+                                    >
+                                        {loading ? (
+                                            <>
+                                                <Loader2 />
+                                                Procesando {bulkProgress.current} de {bulkProgress.total}...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <List />
+                                                Procesar Bulk
+                                            </>
+                                        )}
+                                    </button>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Progress Section */}
+                        {loading && mode === 'bulk' && bulkProgress.total > 0 && (
+                            <div className="card fade-in">
+                                <div className="progress-section">
+                                    <div className="progress-header">
+                                        <span className="progress-label">Progreso del procesamiento</span>
+                                        <span className="progress-stats">
+                                            {bulkProgress.current} / {bulkProgress.total} videos
+                                        </span>
+                                    </div>
+                                    <div className="progress-bar">
+                                        <div 
+                                            className="progress-fill" 
+                                            style={{
+                                                width: `${(bulkProgress.current / bulkProgress.total) * 100}%`
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+
+                                {bulkVideos.length > 0 && (
+                                    <div className="video-list">
+                                        {bulkVideos.map((video, index) => (
+                                            <div key={index} className="video-item">
+                                                <div className="video-info">
+                                                    <div className="video-id">{video.id}</div>
+                                                    {video.error && (
+                                                        <div className="video-status" style={{color: '#dc2626'}}>
+                                                            {video.error}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                {getStatusBadge(video.status, video.error)}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Error Message */}
+                        {error && (
+                            <div className="error-box">
+                                <p className="error-text">❌ {error}</p>
+                            </div>
+                        )}
+
+                        {/* Success Message */}
+                        {success && (
+                            <div className="success-box">
+                                <p className="success-text">✅ {success}</p>
+                            </div>
+                        )}
+
+                        {/* Bulk Results */}
+                        {mode === 'bulk' && bulkResults.length > 0 && !loading && (
+                            <div className="card fade-in">
+                                <div className="transcript-header">
+                                    <div>
+                                        <h2 className="transcript-title">📦 Resultados del Procesamiento Bulk</h2>
+                                        <p className="transcript-subtitle">
+                                            {bulkResults.filter(r => r.status === 'completed').length} exitosos, {' '}
+                                            {bulkResults.filter(r => r.status === 'error').length} fallidos
+                                        </p>
+                                    </div>
+                                    <button 
+                                        onClick={handleBulkDownload}
+                                        className="btn btn-primary"
+                                        disabled={bulkResults.filter(r => r.status === 'completed').length === 0}
+                                    >
+                                        <Download />
+                                        Descargar Todo
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Single Transcript Result */}
+                        {mode === 'single' && transcript && (
+                            <div className="card fade-in">
+                                <div className="transcript-header">
+                                    <div>
+                                        <h2 className="transcript-title">📄 Transcripción</h2>
+                                        {videoTitle && (
+                                            <p className="transcript-subtitle">{videoTitle}</p>
+                                        )}
+                                    </div>
+                                    <div className="button-group">
+                                        <button onClick={handleCopy} className="btn btn-secondary">
+                                            {copied ? (
+                                                <>
+                                                    <CheckCircle2 />
+                                                    <span className="text-green">¡Copiado!</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Copy />
+                                                    Copiar
+                                                </>
+                                            )}
+                                        </button>
+                                        <button onClick={handleDownload} className="btn btn-primary">
+                                            <Download />
+                                            Descargar
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div className="transcript-box">
+                                    <pre className="transcript-text">{transcript}</pre>
+                                </div>
+
+                                <div className="warning-box">
+                                    <p className="warning-text">
+                                        <strong>✅ Producción:</strong> Conectado al API backend real en {API_URL}. 
+                                        Las transcripciones son obtenidas directamente de YouTube.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Features */}
+                        {!transcript && !loading && bulkResults.length === 0 && (
+                            <div className="features-grid">
+                                <div className="feature-card">
+                                    <div className="feature-icon red">
+                                        <Youtube style={{color: '#dc2626'}} />
+                                    </div>
+                                    <h3 className="feature-title">⚡ Individual o Bulk</h3>
+                                    <p className="feature-text">
+                                        Procesa un video o hasta {BULK_LIMITS.MAX_VIDEOS} a la vez
+                                    </p>
+                                </div>
+                                
+                                <div className="feature-card">
+                                    <div className="feature-icon purple">
+                                        <List />
+                                    </div>
+                                    <h3 className="feature-title">🔄 Procesamiento Inteligente</h3>
+                                    <p className="feature-text">
+                                        {BULK_LIMITS.CONCURRENT_REQUESTS} videos simultáneos con rate limiting
+                                    </p>
+                                </div>
+
+                                <div className="feature-card">
+                                    <div className="feature-icon green">
+                                        <Download />
+                                    </div>
+                                    <h3 className="feature-title">💾 Descarga Masiva</h3>
+                                    <p className="feature-text">
+                                        Descarga todas las transcripciones en un solo archivo
+                                    </p>
+                                </div>
+
+                                <div className="feature-card">
+                                    <div className="feature-icon blue">
+                                        <CheckCircle2 />
+                                    </div>
+                                    <h3 className="feature-title">📊 Tracking en Tiempo Real</h3>
+                                    <p className="feature-text">
+                                        Ve el progreso y estado de cada video procesado
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="footer">
+                            <p>📺 YouTube Transcript Generator - Procesamiento Individual y Bulk</p>
+                            <p>Límites seguros para APIs • Sin CDN de Tailwind</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<YouTubeTranscriptApp />);
+    </script>
+</body>
+</html>
