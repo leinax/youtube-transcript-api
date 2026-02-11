@@ -1,0 +1,29 @@
+services:
+  # API Backend Service
+  - type: web
+    name: youtube-transcript-api
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: BULK_MAX_VIDEOS
+        value: 50
+      - key: BULK_CONCURRENT_REQUESTS
+        value: 3
+      - key: BULK_DELAY_BETWEEN_BATCHES
+        value: 1000
+      - key: BULK_REQUEST_TIMEOUT
+        value: 30000
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 60000
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: 20
+      - key: ALLOWED_ORIGINS
+        value: "*"
+    healthCheckPath: /health
